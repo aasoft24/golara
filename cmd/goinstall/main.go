@@ -17,14 +17,19 @@ func main() {
 
 	project := os.Args[1]
 
-	// 1️⃣ Create project folder
-	if err := os.Mkdir(project, 0755); err != nil {
-		fmt.Printf("Failed to create project folder: %v\n", err)
-		return
+	// 1️⃣ Create project folder if not exists
+	if _, err := os.Stat(project); os.IsNotExist(err) {
+		if err := os.Mkdir(project, 0755); err != nil {
+			fmt.Printf("Failed to create project folder: %v\n", err)
+			return
+		}
+	} else {
+		fmt.Printf("Project folder '%s' already exists, continuing...\n", project)
 	}
 
 	// 2️⃣ Clone skeleton repo
-	cloneCmd := exec.Command("git", "clone", skeletonRepo, filepath.Join(project, "temp_skeleton"))
+	tempDir := filepath.Join(project, "temp_skeleton")
+	cloneCmd := exec.Command("git", "clone", skeletonRepo, tempDir)
 	cloneCmd.Stdout = os.Stdout
 	cloneCmd.Stderr = os.Stderr
 	if err := cloneCmd.Run(); err != nil {
@@ -33,14 +38,14 @@ func main() {
 	}
 
 	// 3️⃣ Move skeleton files to project root
-	temp := filepath.Join(project, "temp_skeleton")
-	files, _ := os.ReadDir(temp)
+	files, _ := os.ReadDir(tempDir)
 	for _, f := range files {
-		os.Rename(filepath.Join(temp, f.Name()), filepath.Join(project, f.Name()))
+		os.Rename(filepath.Join(tempDir, f.Name()), filepath.Join(project, f.Name()))
 	}
-	os.RemoveAll(temp)
+	os.RemoveAll(tempDir)
 
-	// 4️⃣ Initialize Go module
+	// 4️⃣ Initialize Go module if not exists
+	modFile := filepath.Join(project, "go.mod")
 	fmt.Print("Enter Go module path (e.g. github.com/username/" + project + "): ")
 	var modulePath string
 	fmt.Scanln(&modulePath)
@@ -48,21 +53,26 @@ func main() {
 		modulePath = project
 	}
 
-	cmd := exec.Command("go", "mod", "init", modulePath)
-	cmd.Dir = project
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		fmt.Printf("Failed to init go.mod: %v\n", err)
-		return
+	if _, err := os.Stat(modFile); err == nil {
+		fmt.Println("✅ go.mod already exists, skipping module init")
+	} else {
+		cmd := exec.Command("go", "mod", "init", modulePath)
+		cmd.Dir = project
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("Failed to init go.mod: %v\n", err)
+			return
+		}
 	}
 
+	// 5️⃣ Run go mod tidy
 	cmdTidy := exec.Command("go", "mod", "tidy")
 	cmdTidy.Dir = project
 	cmdTidy.Stdout = os.Stdout
 	cmdTidy.Stderr = os.Stderr
 	cmdTidy.Run()
 
-	fmt.Printf("✅ Project %s created successfully!\n", project)
+	fmt.Printf("✅ Project '%s' created successfully!\n", project)
 	fmt.Printf("Run: cd %s && go run main.go\n", project)
 }
