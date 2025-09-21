@@ -5,9 +5,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 const skeletonRepo = "https://github.com/aasoft24/golara.git"
+
+// Folders to copy into new project
+var projectFolders = []string{"app", "bootstrap", "resources", "config", "database", "routes", "public", "main.go", "config.yaml", "start.sh"}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -27,7 +31,7 @@ func main() {
 		fmt.Printf("Project folder '%s' already exists, continuing...\n", project)
 	}
 
-	// 2️⃣ Clone skeleton repo
+	// 2️⃣ Clone skeleton repo temporarily
 	tempDir := filepath.Join(project, "temp_skeleton")
 	cloneCmd := exec.Command("git", "clone", skeletonRepo, tempDir)
 	cloneCmd.Stdout = os.Stdout
@@ -37,22 +41,30 @@ func main() {
 		return
 	}
 
-	// 3️⃣ Move skeleton files to project root
-	files, _ := os.ReadDir(tempDir)
-	for _, f := range files {
-		os.Rename(filepath.Join(tempDir, f.Name()), filepath.Join(project, f.Name()))
+	// 3️⃣ Copy only project folders/files
+	for _, name := range projectFolders {
+		src := filepath.Join(tempDir, name)
+		dest := filepath.Join(project, name)
+		if _, err := os.Stat(src); err == nil {
+			// Move or copy
+			os.Rename(src, dest)
+		}
 	}
+
+	// Remove temp skeleton
 	os.RemoveAll(tempDir)
 
-	// 4️⃣ Initialize Go module if not exists
-	modFile := filepath.Join(project, "go.mod")
-	fmt.Printf("Enter Go module path (e.g. github.com/username/%s): ", project)
+	// 4️⃣ Auto-detect module path
 	var modulePath string
-	fmt.Scanln(&modulePath)
-	if modulePath == "" {
-		modulePath = project
+	if strings.Contains(project, "/") {
+		modulePath = project // GitHub-style path
+	} else {
+		modulePath = project // Local project name
 	}
+	fmt.Printf("✅ Using module path: %s\n", modulePath)
 
+	// 5️⃣ Initialize Go module if not exists
+	modFile := filepath.Join(project, "go.mod")
 	if _, err := os.Stat(modFile); err == nil {
 		fmt.Println("✅ go.mod already exists, skipping module init")
 	} else {
@@ -67,7 +79,14 @@ func main() {
 		}
 	}
 
-	// 5️⃣ Run go mod tidy safely
+	// 6️⃣ Add skeleton dependency
+	addDep := exec.Command("go", "get", "github.com/aasoft24/golara@latest")
+	addDep.Dir = project
+	addDep.Stdout = os.Stdout
+	addDep.Stderr = os.Stderr
+	_ = addDep.Run()
+
+	// 7️⃣ Run go mod tidy
 	cmdTidy := exec.Command("go", "mod", "tidy")
 	cmdTidy.Dir = project
 	cmdTidy.Stdout = os.Stdout
