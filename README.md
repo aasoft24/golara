@@ -27,6 +27,9 @@ A beautiful Laravel-inspired web framework for Go language, built with Go 1.24.6
 git clone https://github.com/aasoft24/golara.git
 cd golara
 
+go install github.com/aasoft24/golara/cmd/goinstall@latest
+
+
 # Install dependencies
 go mod download
 
