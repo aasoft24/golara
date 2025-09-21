@@ -1,0 +1,288 @@
+{{ define "content" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RechargeBD - Mobile Recharge Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2D7D46',
+                        secondary: '#E6492D',
+                        accent: '#F8B531',
+                        light: '#F5F5F5',
+                        dark: '#1A1A1A',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .hero-pattern {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1560472355-536de3962603?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        .offer-card {
+            transition: transform 0.3s ease;
+        }
+        .offer-card:hover {
+            transform: translateY(-5px);
+        }
+        .operator-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        .gp { background: linear-gradient(to bottom, #0072C6, #005AA0); }
+        .bl { background: linear-gradient(to bottom, #E31E24, #C00); }
+        .rb { background: linear-gradient(to bottom, #FF0000, #CC0000); }
+        .tt { background: linear-gradient(to bottom, #6E0D77, #4F0757); }
+        .al { background: linear-gradient(to bottom, #FF6600, #E55A00); }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">RB</div>
+                <h1 class="ml-3 text-2xl font-bold text-primary">Recharge<span class="text-secondary">BD</span></h1>
+            </div>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#" class="text-dark hover:text-primary font-medium">Home</a>
+                <a href="#" class="text-dark hover:text-primary font-medium">Offers</a>
+                <a href="#" class="text-dark hover:text-primary font-medium">History</a>
+                <a href="#" class="text-dark hover:text-primary font-medium">Help</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <a href="/login" class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-opacity-90">Login</a>
+                <button class="md:hidden text-dark">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-pattern py-16 text-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6">Instant Mobile Recharge in Bangladesh</h2>
+                <p class="text-xl mb-8">Recharge any Bangladeshi mobile operator in less than 10 seconds</p>
+                
+                <!-- Recharge Form -->
+                <div class="bg-white rounded-xl p-6 shadow-lg">
+                    <h3 class="text-2xl font-bold text-dark mb-4">Recharge Now</h3>
+                    <form class="space-y-4">
+                        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                            <div class="flex-1">
+                                <label class="block text-left text-dark mb-2">Mobile Operator</label>
+                                <div class="relative">
+                                    <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                                        <option value="">Select Operator</option>
+                                        <option value="gp">Grameenphone</option>
+                                        <option value="bl">Banglalink</option>
+                                        <option value="rb">Robi</option>
+                                        <option value="tt">Teletalk</option>
+                                        <option value="ai">Airtel</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-left text-dark mb-2">Mobile Number</label>
+                                <input type="tel" placeholder="01XXXXXXXXX" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                            <div class="flex-1">
+                                <label class="block text-left text-dark mb-2">Amount (BDT)</label>
+                                <input type="number" placeholder="Enter amount" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-left text-dark mb-2">Payment Method</label>
+                                <div class="relative">
+                                    <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent appearance-none">
+                                        <option value="">Select Payment</option>
+                                        <option value="bkash">bKash</option>
+                                        <option value="nagad">Nagad</option>
+                                        <option value="rocket">Rocket</option>
+                                        <option value="card">Card</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-opacity-90 transition">Recharge Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Operators Section -->
+    <section class="py-12 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-dark mb-12">Supported Operators</h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-8 max-w-5xl mx-auto">
+                <div class="flex flex-col items-center p-4 rounded-lg shadow-md">
+                    <div class="operator-logo gp mb-3">GP</div>
+                    <h3 class="font-medium">Grameenphone</h3>
+                </div>
+                <div class="flex flex-col items-center p-4 rounded-lg shadow-md">
+                    <div class="operator-logo bl mb-3">BL</div>
+                    <h3 class="font-medium">Banglalink</h3>
+                </div>
+                <div class="flex flex-col items-center p-4 rounded-lg shadow-md">
+                    <div class="operator-logo rb mb-3">RB</div>
+                    <h3 class="font-medium">Robi</h3>
+                </div>
+                <div class="flex flex-col items-center p-4 rounded-lg shadow-md">
+                    <div class="operator-logo tt mb-3">TT</div>
+                    <h3 class="font-medium">Teletalk</h3>
+                </div>
+                <div class="flex flex-col items-center p-4 rounded-lg shadow-md">
+                    <div class="operator-logo al mb-3">AL</div>
+                    <h3 class="font-medium">Airtel</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-12 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-dark mb-12">Why Choose RechargeBD?</h2>
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                    <div class="w-14 h-14 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bolt text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Instant Recharge</h3>
+                    <p class="text-gray-600">Recharge your mobile in less than 10 seconds. Get instant confirmation.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                    <div class="w-14 h-14 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">100% Secure</h3>
+                    <p class="text-gray-600">Your transactions are secure with our encrypted payment system.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                    <div class="w-14 h-14 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-tags text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Best Offers</h3>
+                    <p class="text-gray-600">Enjoy exclusive offers and cashback on every recharge.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Offers Section -->
+    <section class="py-12 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-dark mb-12">Special Offers</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="offer-card bg-gradient-to-r from-primary to-secondary text-white p-6 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold">GP 10% Cashback</h3>
+                        <span class="bg-white text-primary text-sm font-bold px-2 py-1 rounded">GP</span>
+                    </div>
+                    <p class="mb-4">Get 10% cashback on Grameenphone recharges above 100 BDT.</p>
+                    <button class="bg-white text-primary font-semibold px-4 py-2 rounded-lg">Avail Now</button>
+                </div>
+                <div class="offer-card bg-gradient-to-r from-purple-500 to-purple-700 text-white p-6 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold">Banglalink Bonus</h3>
+                        <span class="bg-white text-purple-600 text-sm font-bold px-2 py-1 rounded">BL</span>
+                    </div>
+                    <p class="mb-4">Extra 15% talktime on Banglalink recharges of 200 BDT or more.</p>
+                    <button class="bg-white text-purple-600 font-semibold px-4 py-2 rounded-lg">Avail Now</button>
+                </div>
+                <div class="offer-card bg-gradient-to-r from-orange-500 to-orange-700 text-white p-6 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold">Robi Super Offer</h3>
+                        <span class="bg-white text-orange-600 text-sm font-bold px-2 py-1 rounded">RB</span>
+                    </div>
+                    <p class="mb-4">Double data on Robi recharges with this special offer.</p>
+                    <button class="bg-white text-orange-600 font-semibold px-4 py-2 rounded-lg">Avail Now</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Recharge<span class="text-primary">BD</span></h3>
+                    <p class="text-gray-400">The fastest and most secure mobile recharge service in Bangladesh.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Offers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Operators</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Grameenphone</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Banglalink</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Robi</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Teletalk</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Airtel</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Contact Us</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center space-x-2">
+                            <i class="fas fa-map-marker-alt text-primary"></i>
+                            <span class="text-gray-400">Gulshan, Dhaka, Bangladesh</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <i class="fas fa-phone text-primary"></i>
+                            <span class="text-gray-400">+880 1712 345678</span>
+                        </li>
+                        <li class="flex items-center space-x-2">
+                            <i class="fas fa-envelope text-primary"></i>
+                            <span class="text-gray-400">support@rechargebd.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2023 RechargeBD. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+{{ end }}
