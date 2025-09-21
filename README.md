@@ -24,7 +24,7 @@ A beautiful Laravel-inspired web framework for Go language, built with Go 1.24.6
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/golara.git
+git clone https://github.com/aasoft24/golara.git
 cd golara
 
 # Install dependencies
