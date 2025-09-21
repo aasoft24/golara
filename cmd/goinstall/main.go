@@ -2,16 +2,27 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
 const skeletonRepo = "https://github.com/aasoft24/golara.git"
 
-// Folders to copy into new project
-var projectFolders = []string{"app", "bootstrap", "resources", "config", "database", "routes", "public", "main.go", "config.yaml", "start.sh"}
+// Folders and files to copy
+var projectFolders = []string{
+	"app",
+	"bootstrap",
+	"resources",
+	"config",
+	"database",
+	"routes",
+	"public",
+	"main.go",
+	"config.yaml",
+	"start.sh",
+}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -41,25 +52,26 @@ func main() {
 		return
 	}
 
-	// 3️⃣ Copy only project folders/files
+	// 3️⃣ Copy only defined folders/files
 	for _, name := range projectFolders {
 		src := filepath.Join(tempDir, name)
 		dest := filepath.Join(project, name)
 		if _, err := os.Stat(src); err == nil {
-			// Move or copy
-			os.Rename(src, dest)
+			if err := copyRecursive(src, dest); err != nil {
+				fmt.Printf("Failed to copy %s: %v\n", name, err)
+			}
 		}
 	}
 
 	// Remove temp skeleton
 	os.RemoveAll(tempDir)
 
-	// 4️⃣ Auto-detect module path
+	// 4️⃣ Module path prompt
+	fmt.Print("Enter Go module path (e.g. github.com/username/" + project + "): ")
 	var modulePath string
-	if strings.Contains(project, "/") {
-		modulePath = project // GitHub-style path
-	} else {
-		modulePath = project // Local project name
+	fmt.Scanln(&modulePath)
+	if modulePath == "" {
+		modulePath = project
 	}
 	fmt.Printf("✅ Using module path: %s\n", modulePath)
 
@@ -73,13 +85,13 @@ func main() {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
-			fmt.Printf("⚠️ Failed to init go.mod, continuing anyway: %v\n", err)
+			fmt.Printf("⚠️ Failed to init go.mod: %v\n", err)
 		} else {
 			fmt.Println("✅ go.mod initialized successfully")
 		}
 	}
 
-	// 6️⃣ Add skeleton dependency
+	// 6️⃣ Add golara dependency
 	addDep := exec.Command("go", "get", "github.com/aasoft24/golara@latest")
 	addDep.Dir = project
 	addDep.Stdout = os.Stdout
@@ -95,4 +107,33 @@ func main() {
 
 	fmt.Printf("🚀 Project '%s' created successfully!\n", project)
 	fmt.Printf("Run: cd %s && go run main.go\n", project)
+}
+
+// copyRecursive copies folders and files recursively
+func copyRecursive(src, dest string) error {
+	info, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() {
+		if err := os.MkdirAll(dest, info.Mode()); err != nil {
+			return err
+		}
+		entries, _ := os.ReadDir(src)
+		for _, e := range entries {
+			if err := copyRecursive(filepath.Join(src, e.Name()), filepath.Join(dest, e.Name())); err != nil {
+				return err
+			}
+		}
+	} else {
+		from, _ := os.Open(src)
+		defer from.Close()
+		to, _ := os.Create(dest)
+		defer to.Close()
+		if _, err := io.Copy(to, from); err != nil {
+			return err
+		}
+	}
+	return nil
 }
