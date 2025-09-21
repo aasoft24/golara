@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,7 +10,6 @@ import (
 const skeletonRepo = "https://github.com/aasoft24/golara.git"
 
 func main() {
-	fmt.Println("Goinstall CLI works!")
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: goinstall <project-name>")
 		return
@@ -21,7 +19,8 @@ func main() {
 
 	// 1️⃣ Create project folder
 	if err := os.Mkdir(project, 0755); err != nil {
-		log.Fatalf("Failed to create project folder: %v", err)
+		fmt.Printf("Failed to create project folder: %v\n", err)
+		return
 	}
 
 	// 2️⃣ Clone skeleton repo
@@ -29,7 +28,8 @@ func main() {
 	cloneCmd.Stdout = os.Stdout
 	cloneCmd.Stderr = os.Stderr
 	if err := cloneCmd.Run(); err != nil {
-		log.Fatalf("Failed to clone skeleton: %v", err)
+		fmt.Printf("Failed to clone skeleton: %v\n", err)
+		return
 	}
 
 	// 3️⃣ Move skeleton files to project root
@@ -40,12 +40,12 @@ func main() {
 	}
 	os.RemoveAll(temp)
 
-	// 4️⃣ Initialize Go module (GitHub-ready)
+	// 4️⃣ Initialize Go module
 	fmt.Print("Enter Go module path (e.g. github.com/username/" + project + "): ")
 	var modulePath string
 	fmt.Scanln(&modulePath)
 	if modulePath == "" {
-		modulePath = project // fallback to local-only module
+		modulePath = project
 	}
 
 	cmd := exec.Command("go", "mod", "init", modulePath)
@@ -53,7 +53,8 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		log.Fatalf("Failed to init go.mod: %v", err)
+		fmt.Printf("Failed to init go.mod: %v\n", err)
+		return
 	}
 
 	cmdTidy := exec.Command("go", "mod", "tidy")
