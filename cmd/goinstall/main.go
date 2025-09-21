@@ -46,7 +46,7 @@ func main() {
 
 	// 4️⃣ Initialize Go module if not exists
 	modFile := filepath.Join(project, "go.mod")
-	fmt.Print("Enter Go module path (e.g. github.com/username/" + project + "): ")
+	fmt.Printf("Enter Go module path (e.g. github.com/username/%s): ", project)
 	var modulePath string
 	fmt.Scanln(&modulePath)
 	if modulePath == "" {
@@ -61,18 +61,19 @@ func main() {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
-			fmt.Printf("Failed to init go.mod: %v\n", err)
-			return
+			fmt.Printf("⚠️ Failed to init go.mod, continuing anyway: %v\n", err)
+		} else {
+			fmt.Println("✅ go.mod initialized successfully")
 		}
 	}
 
-	// 5️⃣ Run go mod tidy
+	// 5️⃣ Run go mod tidy safely
 	cmdTidy := exec.Command("go", "mod", "tidy")
 	cmdTidy.Dir = project
 	cmdTidy.Stdout = os.Stdout
 	cmdTidy.Stderr = os.Stderr
-	cmdTidy.Run()
+	_ = cmdTidy.Run()
 
-	fmt.Printf("✅ Project '%s' created successfully!\n", project)
+	fmt.Printf("🚀 Project '%s' created successfully!\n", project)
 	fmt.Printf("Run: cd %s && go run main.go\n", project)
 }
