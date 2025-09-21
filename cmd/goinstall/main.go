@@ -11,6 +11,7 @@ import (
 const skeletonRepo = "https://github.com/aasoft24/golara.git"
 
 func main() {
+	fmt.Println("Goinstall CLI works!")
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: goinstall <project-name>")
 		return
