@@ -1,7 +1,8 @@
 package providers
 
 import (
-	"github.com/aasoft24/golara/routes"
+	"your_project/routes"
+
 	"github.com/aasoft24/golara/wpkg/foundation"
 	"github.com/aasoft24/golara/wpkg/routing"
 	"github.com/aasoft24/golara/wpkg/view"

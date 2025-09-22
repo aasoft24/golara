@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 const skeletonRepo = "https://github.com/aasoft24/golara.git"
@@ -34,7 +36,7 @@ func main() {
 
 	// 2️⃣ Clone Golara repo temporarily
 	tempDir := filepath.Join(project, "temp_skeleton")
-	cloneCmd := exec.Command("git", "clone", skeletonRepo, tempDir)
+	cloneCmd := exec.Command("git", "clone", "--depth", "1", skeletonRepo, tempDir)
 	cloneCmd.Stdout = os.Stdout
 	cloneCmd.Stderr = os.Stderr
 	if err := cloneCmd.Run(); err != nil {
@@ -42,12 +44,20 @@ func main() {
 		return
 	}
 
-	// 3️⃣ Copy only required folders/files
+	// 3️⃣ Copy and replace "your_project" with project name
 	for _, name := range projectFolders {
 		src := filepath.Join(tempDir, name)
 		dest := filepath.Join(project, name)
-		if _, err := os.Stat(src); err == nil {
-			os.Rename(src, dest)
+
+		if info, err := os.Stat(src); err == nil {
+			if info.IsDir() {
+				os.Rename(src, dest)
+			} else {
+				// ফাইল কনটেন্ট পড়া
+				data, _ := ioutil.ReadFile(src)
+				content := strings.ReplaceAll(string(data), "your_project", project)
+				ioutil.WriteFile(dest, []byte(content), 0644)
+			}
 		}
 	}
 

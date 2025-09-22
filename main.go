@@ -6,7 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/aasoft24/golara/bootstrap"
+	"your_project/bootstrap"
+
 	"github.com/aasoft24/golara/wpkg/configs"
 )
 

@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/aasoft24/golara/app/models"
-	"github.com/aasoft24/golara/app/providers"
+	_ "your_project/app/models"
+
+	"your_project/app/providers"
+
 	"github.com/aasoft24/golara/wpkg/cache"
 	"github.com/aasoft24/golara/wpkg/configs"
 	"github.com/aasoft24/golara/wpkg/database"
