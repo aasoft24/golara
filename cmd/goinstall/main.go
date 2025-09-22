@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,6 +23,7 @@ func main() {
 	}
 
 	project := os.Args[1]
+	modulePath := "github.com/username/" + project // auto module path
 
 	// 1️⃣ Create project folder
 	if _, err := os.Stat(project); os.IsNotExist(err) {
@@ -44,31 +45,37 @@ func main() {
 		return
 	}
 
-	// 3️⃣ Copy and replace "your_project" with project name
+	// 3️⃣ Copy all needed files
 	for _, name := range projectFolders {
 		src := filepath.Join(tempDir, name)
 		dest := filepath.Join(project, name)
-
-		if info, err := os.Stat(src); err == nil {
-			if info.IsDir() {
-				os.Rename(src, dest)
-			} else {
-				// ফাইল কনটেন্ট পড়া
-				data, _ := ioutil.ReadFile(src)
-				content := strings.ReplaceAll(string(data), "your_project", project)
-				ioutil.WriteFile(dest, []byte(content), 0644)
+		if _, err := os.Stat(src); err == nil {
+			if err := os.Rename(src, dest); err != nil {
+				fmt.Printf("Move failed for %s: %v\n", name, err)
 			}
 		}
 	}
-
-	// Remove temp skeleton
 	os.RemoveAll(tempDir)
 
-	// 4️⃣ Initialize go.mod
-	fmt.Printf("Enter Go module path (e.g. github.com/username/%s): ", project)
-	var modulePath string
-	fmt.Scanln(&modulePath)
+	// 4️⃣ Recursive replace inside project files
+	filepath.WalkDir(project, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return nil
+		}
 
+		// শুধু go, yaml, sh, txt, md ফাইলগুলোতে replace করা
+		ext := filepath.Ext(path)
+		if ext == ".go" || ext == ".yaml" || ext == ".sh" || ext == ".txt" || ext == ".md" {
+			data, _ := os.ReadFile(path)
+			content := string(data)
+			content = strings.ReplaceAll(content, "your_project", project)
+			content = strings.ReplaceAll(content, "your/module/path", modulePath)
+			os.WriteFile(path, []byte(content), 0644)
+		}
+		return nil
+	})
+
+	// 5️⃣ Initialize go.mod
 	modFile := filepath.Join(project, "go.mod")
 	if _, err := os.Stat(modFile); os.IsNotExist(err) {
 		cmd := exec.Command("go", "mod", "init", modulePath)
@@ -84,14 +91,14 @@ func main() {
 		fmt.Println("✅ go.mod already exists, skipping")
 	}
 
-	// 5️⃣ Add Golara dependency
+	// 6️⃣ Add Golara dependency
 	cmdGet := exec.Command("go", "get", "github.com/aasoft24/golara@latest")
 	cmdGet.Dir = project
 	cmdGet.Stdout = os.Stdout
 	cmdGet.Stderr = os.Stderr
 	_ = cmdGet.Run()
 
-	// 6️⃣ Run go mod tidy
+	// 7️⃣ Run go mod tidy
 	cmdTidy := exec.Command("go", "mod", "tidy")
 	cmdTidy.Dir = project
 	cmdTidy.Stdout = os.Stdout
@@ -99,5 +106,6 @@ func main() {
 	_ = cmdTidy.Run()
 
 	fmt.Printf("🚀 Project '%s' created successfully!\n", project)
+	fmt.Printf("Module Path: %s\n", modulePath)
 	fmt.Printf("Run: cd %s && go run main.go\n", project)
 }

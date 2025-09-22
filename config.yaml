@@ -1,5 +1,5 @@
 app:
-  name: "Golara"
+  name: "your/module/path"
   env: "local"
   timezone: "Asia/Dhaka"
 
@@ -9,7 +9,7 @@ database:
     mysql:
       host: 127.0.0.1
       port: 3306
-      database: golara
+      database: your/module/path
       username: root
       password: 
     pgsql:

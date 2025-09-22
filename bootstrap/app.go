@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 
-	_ "your_project/app/models"
+	_ "your/module/path/app/models"
 
-	"your_project/app/providers"
+	"your/module/path/app/providers"
 
 	"github.com/aasoft24/golara/wpkg/cache"
 	"github.com/aasoft24/golara/wpkg/configs"
