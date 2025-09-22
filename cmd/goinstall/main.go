@@ -11,6 +11,7 @@ import (
 
 const skeletonRepo = "https://github.com/aasoft24/golara.git"
 
+// Project folders/files to copy
 var projectFolders = []string{
 	"app", "bootstrap", "resources", "config", "database", "routes", "public",
 	"main.go", "config.yaml", "start.sh",
@@ -23,7 +24,7 @@ func main() {
 	}
 
 	project := os.Args[1]
-	modulePath := "github.com/username/" + project // auto module path
+	modulePath := project // auto module path
 
 	// 1️⃣ Create project folder
 	if _, err := os.Stat(project); os.IsNotExist(err) {
@@ -45,7 +46,7 @@ func main() {
 		return
 	}
 
-	// 3️⃣ Copy all needed files
+	// 3️⃣ Copy project folders/files
 	for _, name := range projectFolders {
 		src := filepath.Join(tempDir, name)
 		dest := filepath.Join(project, name)
@@ -55,6 +56,8 @@ func main() {
 			}
 		}
 	}
+
+	// Remove temp skeleton
 	os.RemoveAll(tempDir)
 
 	// 4️⃣ Recursive replace inside project files
@@ -63,9 +66,9 @@ func main() {
 			return nil
 		}
 
-		// শুধু go, yaml, sh, txt, md ফাইলগুলোতে replace করা
 		ext := filepath.Ext(path)
-		if ext == ".go" || ext == ".yaml" || ext == ".sh" || ext == ".txt" || ext == ".md" {
+		// শুধু দরকারি ফাইলগুলোতে replace
+		if ext == ".go" || ext == ".mod" || ext == ".yaml" || ext == ".sh" || ext == ".txt" || ext == ".md" {
 			data, _ := os.ReadFile(path)
 			content := string(data)
 			content = strings.ReplaceAll(content, "your_project", project)
@@ -75,7 +78,7 @@ func main() {
 		return nil
 	})
 
-	// 5️⃣ Initialize go.mod
+	// 5️⃣ Initialize go.mod if not exists
 	modFile := filepath.Join(project, "go.mod")
 	if _, err := os.Stat(modFile); os.IsNotExist(err) {
 		cmd := exec.Command("go", "mod", "init", modulePath)
