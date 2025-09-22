@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -53,6 +54,27 @@ func (c *Context) JSON(code int, data interface{}) {
 	_ = json.NewEncoder(c.Writer).Encode(data)
 }
 
+func (c *Context) BindJSON(out interface{}) error {
+	if c.Request == nil || c.Request.Body == nil {
+		return http.ErrBodyNotAllowed
+	}
+
+	body, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		return err
+	}
+
+	if len(body) == 0 {
+		return http.ErrBodyNotAllowed
+	}
+
+	if err := json.Unmarshal(body, out); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // HTML string
 func (c *Context) HTML(status int, html string) {
 	c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -99,6 +121,19 @@ func (c *Context) FormValue(key string, defaultValue ...string) string {
 		return defaultValue[0]
 	}
 	return ""
+}
+
+func (c *Context) PostFormArray(key string, defaultValue ...[]string) []string {
+	// ensure form is parsed
+	if err := c.Request.ParseForm(); err == nil {
+		if vals, ok := c.Request.PostForm[key]; ok && len(vals) > 0 {
+			return vals
+		}
+	}
+	if len(defaultValue) > 0 {
+		return defaultValue[0]
+	}
+	return []string{}
 }
 
 // AllQuery returns all query parameters as a map
@@ -239,20 +274,6 @@ func (c *Context) Set(key string, value interface{}) {
 	c.Values[key] = value
 }
 
-// func (c *Context) Set(key string, value interface{}) {
-// 	if c.Values == nil {
-// 		c.mu = sync.Mutex{}
-// 	}
-// 	c.mu.Lock()
-// 	defer c.mu.Unlock()
-
-// 	// Add Values field to Context struct first
-// 	if c.Values == nil {
-// 		c.Values = make(map[string]interface{})
-// 	}
-// 	c.Values[key] = value
-// }
-
 func (c *Context) Get(key string) interface{} {
 	if c.Values == nil {
 		return nil
@@ -353,61 +374,6 @@ func (c *Context) RedirectBack() {
 	c.Redirect(referer)
 }
 
-// Redirect sends an HTTP redirect to the given URL with optional status code (default 302)
-// func (c *Context) Redirect(url string, status ...int) {
-// 	code := http.StatusFound // 302 by default
-// 	if len(status) > 0 {
-// 		code = status[0]
-// 	}
-// 	c.Writer.Header().Set("Location", url)
-// 	c.Writer.WriteHeader(code)
-// }
-
-// func (ctx *Context) SetFlash(msgType, message string) {
-// 	sess, _ := store.Get(ctx.Request, "flash-session")
-
-// 	flashMap := map[string]string{
-// 		"Flash":     message,
-// 		"FlashType": msgType,
-// 	}
-
-// 	sess.AddFlash(flashMap)
-// 	sess.Save(ctx.Request, ctx.Writer)
-
-// 	fmt.Println("set flash =>", flashMap)
-// }
-
-// func (ctx *Context) GetFlash() map[string]string {
-// 	sess, _ := store.Get(ctx.Request, "flash-session")
-
-// 	flashes := sess.Flashes()
-// 	sess.Save(ctx.Request, ctx.Writer)
-
-// 	fmt.Println("get msg flash =>", flashes)
-
-// 	if len(flashes) > 0 {
-// 		if flashMap, ok := flashes[0].(map[string]string); ok {
-// 			fmt.Println("get flash =>", flashMap)
-// 			return flashMap
-// 		}
-// 	}
-// 	return nil
-// }
-
-// SetFlash sets a flash message in session
-// func (ctx *Context) SetFlash(msgType, message string) {
-// 	ctx.Session.Set("_flash", map[string]string{
-// 		"Flash":     message,
-// 		"FlashType": msgType,
-// 	})
-
-// 	_ = ctx.Session.Save()
-// 	fmt.Println("set flash =>", map[string]string{
-// 		"Flash":     message,
-// 		"FlashType": msgType,
-// 	})
-// }
-
 func (ctx *Context) SetFlash(msgType, message string) {
 	// Update context fields immediately
 	ctx.Flash = message
@@ -437,22 +403,6 @@ func (ctx *Context) GetFlash() map[string]string {
 	ctx.Session.Delete("_flash") // safely delete
 	return flash
 }
-
-// HasFlash checks if there are any flash messages
-// func (ctx *Context) HasFlash() bool {
-// 	flashes := ctx.Session.Flashes()
-// 	// Restore the flashes since we're just checking
-// 	for _, flash := range flashes {
-// 		ctx.Session.AddFlash(flash)
-// 	}
-// 	return len(flashes) > 0
-// }
-
-// // ClearFlashes removes all flash messages
-// func (ctx *Context) ClearFlashes() {
-// 	ctx.Session.Flashes()
-// 	ctx.Session.Save(ctx.Request, ctx.Writer)
-// }
 
 // Render renders a template with optional layout
 func (c *Context) Render(status int, view string, data interface{}, layout ...string) {
@@ -491,19 +441,6 @@ func (ctx *Context) SetOld(key, value string) {
 	_ = ctx.Session.Save()
 	//fmt.Println("Old session after set:", ctx.Session.Get("_old"))
 }
-
-// func (ctx *Context) GetOld(key string) string {
-// 	oldVal := ctx.Session.Get("_old")
-// 	//fmt.Println("Old session before get:", oldVal)
-// 	if oldVal == nil {
-// 		return ""
-// 	}
-// 	oldMap, ok := oldVal.(map[string]string)
-// 	if !ok {
-// 		return ""
-// 	}
-// 	return oldMap[key]
-// }
 
 func (c *Context) GetOld(key string) string {
 	if old := c.Session.Get("_old"); old != nil {

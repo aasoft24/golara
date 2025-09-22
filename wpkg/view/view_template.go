@@ -49,22 +49,6 @@ func NewTemplateEngine(viewsPath, defaultLayout string) *TemplateEngine {
 	return engine
 }
 
-// var stacks = make(map[string][]template.HTML)
-
-// func push(stackName, content string) template.HTML {
-// 	stacks[stackName] = append(stacks[stackName], template.HTML(content))
-// 	return ""
-// }
-
-// func stack(stackName string) template.HTML {
-// 	var out string
-// 	for _, v := range stacks[stackName] {
-// 		out += string(v) + "\n"
-// 	}
-// 	stacks[stackName] = nil // reset করে দিচ্ছি, যেন Laravel এর মত behave করে
-// 	return template.HTML(out)
-// }
-
 // ----------------------------
 // Load templates
 // ----------------------------
@@ -124,6 +108,26 @@ func (e *TemplateEngine) loadTemplates() {
 			}
 			return ""
 		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"add1": func(a int) int {
+			return a + 1
+		},
+		"sub": func(a, b int) int {
+			return a - b
+		},
+		"sub1": func(a int) int {
+			return a - 1
+		},
+		"until": func(n int) []int {
+			var nums []int
+			for i := 1; i <= n; i++ {
+				nums = append(nums, i)
+			}
+			return nums
+		},
+		"dict": dict,
 	}
 
 	if e.useEmbed {
@@ -204,93 +208,3 @@ func (e *TemplateEngine) RenderWithoutLayout(w io.Writer, viewName string, data 
 	}
 	return tmpl.ExecuteTemplate(w, "content", data)
 }
-
-// package view
-
-// import (
-// 	"fmt"
-// 	"html/template"
-// 	"io"
-// 	"os"
-// 	"path/filepath"
-// 	"strings"
-// )
-
-// type TemplateEngine struct {
-// 	templates     map[string]*template.Template
-// 	DefaultLayout string
-// 	viewsPath     string
-// }
-
-// func NewTemplateEngine(viewsPath, defaultLayout string) *TemplateEngine {
-// 	engine := &TemplateEngine{
-// 		templates:     make(map[string]*template.Template),
-// 		DefaultLayout: defaultLayout,
-// 		viewsPath:     viewsPath,
-// 	}
-// 	engine.loadTemplates()
-// 	return engine
-// }
-
-// func (e *TemplateEngine) loadTemplates() {
-// 	fmt.Println("viewsPath:", e.viewsPath)
-// 	partials, _ := filepath.Glob(filepath.Join(e.viewsPath, "partials", "*.html"))
-
-// 	filepath.Walk(e.viewsPath, func(path string, info os.FileInfo, err error) error {
-// 		if err != nil || info.IsDir() || !strings.HasSuffix(path, ".html") {
-// 			return nil
-// 		}
-
-// 		// Skip partials
-// 		if strings.Contains(path, "partials") {
-// 			return nil
-// 		}
-
-// 		relPath, _ := filepath.Rel(e.viewsPath, path)
-// 		viewName := strings.TrimSuffix(relPath, filepath.Ext(relPath))
-
-// 		files := append([]string{path}, partials...)
-
-// 		// always include default + other layouts
-// 		layouts, _ := filepath.Glob(filepath.Join(e.viewsPath, "layouts", "*.html"))
-// 		files = append(files, layouts...)
-
-// 		tmpl := template.Must(template.ParseFiles(files...))
-// 		e.templates[viewName] = tmpl
-// 		return nil
-// 	})
-// }
-
-// // Default render → execute default layout block
-// func (e *TemplateEngine) Render(w io.Writer, name string, data interface{}) error {
-// 	tmpl, ok := e.templates[name]
-// 	if !ok {
-// 		return fmt.Errorf("template not found: %s", name)
-// 	}
-// 	return tmpl.ExecuteTemplate(w, e.DefaultLayout, data)
-// }
-
-// // Render with specific layout
-// func (e *TemplateEngine) RenderWithLayout(w io.Writer, viewName, layoutName string, data interface{}) error {
-// 	tmpl, ok := e.templates[viewName]
-// 	if !ok {
-// 		return fmt.Errorf("template not found: %s", viewName)
-// 	}
-
-// 	layout := layoutName
-// 	if layout == "" {
-// 		layout = e.DefaultLayout
-// 	}
-
-// 	// এখানে layoutName আসলে layout.html এ define এর নাম হতে হবে
-// 	return tmpl.ExecuteTemplate(w, layout, data)
-// }
-
-// // Only content (HTMX style)
-// func (e *TemplateEngine) RenderWithoutLayout(w io.Writer, viewName string, data interface{}) error {
-// 	tmpl, ok := e.templates[viewName]
-// 	if !ok {
-// 		return fmt.Errorf("template not found: %s", viewName)
-// 	}
-// 	return tmpl.ExecuteTemplate(w, "content", data)
-// }

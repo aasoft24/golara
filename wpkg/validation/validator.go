@@ -31,6 +31,7 @@ func NewValidator(data map[string]interface{}, db *gorm.DB) *Validator {
 }
 
 // Validate function with Laravel-style rules
+
 func (v *Validator) Validate(rules map[string]string, customMessages ...map[string]string) bool {
 	// Set custom messages if provided
 	if len(customMessages) > 0 {
@@ -38,97 +39,113 @@ func (v *Validator) Validate(rules map[string]string, customMessages ...map[stri
 	}
 
 	for field, ruleStr := range rules {
-		rules := strings.Split(ruleStr, "|")
+		rulesArr := strings.Split(ruleStr, "|")
 		value, exists := v.Data[field]
 
-		for _, rule := range rules {
-			if rule == "" {
-				continue
+		// Handle []string values
+		var values []interface{}
+		switch val := value.(type) {
+		case []string:
+			for _, v := range val {
+				values = append(values, v)
 			}
+		case []interface{}:
+			values = val
+		default:
+			values = []interface{}{value}
+		}
 
-			// Check for sometimes rule
-			if rule == "sometimes" {
-				if !exists {
-					continue // Skip validation if field doesn't exist
+		// Validate each value (for multi or single)
+		for _, singleVal := range values {
+			for _, rule := range rulesArr {
+				if rule == "" {
+					continue
 				}
-				continue
-			}
 
-			parts := strings.SplitN(rule, ":", 2)
-			ruleName := parts[0]
-			ruleValue := ""
-			if len(parts) > 1 {
-				ruleValue = parts[1]
-			}
+				// Check for sometimes rule
+				if rule == "sometimes" {
+					if !exists {
+						continue
+					}
+					continue
+				}
 
-			if !exists && ruleName != "required" {
-				continue
-			}
+				parts := strings.SplitN(rule, ":", 2)
+				ruleName := parts[0]
+				ruleValue := ""
+				if len(parts) > 1 {
+					ruleValue = parts[1]
+				}
 
-			switch ruleName {
-			case "required":
-				if !v.validateRequired(value) {
-					v.addError(field, "The %s field is required", field)
+				if !exists && ruleName != "required" {
+					continue
 				}
-			case "email":
-				if exists && !v.validateEmail(value) {
-					v.addError(field, "The %s must be a valid email address", field)
-				}
-			case "min":
-				if exists && !v.validateMin(value, ruleValue) {
-					v.addError(field, "The %s must be at least %s characters", field, ruleValue)
-				}
-			case "max":
-				if exists && !v.validateMax(value, ruleValue) {
-					v.addError(field, "The %s may not be greater than %s characters", field, ruleValue)
-				}
-			case "len":
-				if exists && !v.validateLen(value, ruleValue) {
-					v.addError(field, "The %s must be %s characters", field, ruleValue)
-				}
-			case "numeric":
-				if exists && !v.validateNumeric(value) {
-					v.addError(field, "The %s must be a number", field)
-				}
-			case "same":
-				if exists && !v.validateSame(value, v.Data[ruleValue]) {
-					v.addError(field, "The %s and %s must match", field, ruleValue)
-				}
-			case "alpha":
-				if exists && !v.validateAlpha(value.(string)) {
-					v.addError(field, "The %s may only contain letters", field)
-				}
-			case "alpha_num":
-				if exists && !v.validateAlphaNum(value.(string)) {
-					v.addError(field, "The %s may only contain letters and numbers", field)
-				}
-			case "in":
-				if exists && !v.validateIn(value, ruleValue) {
-					v.addError(field, "The selected %s is invalid", field)
-				}
-			case "not_in":
-				if exists && !v.validateNotIn(value, ruleValue) {
-					v.addError(field, "The selected %s is invalid", field)
-				}
-			case "regex":
-				if exists && !v.validateRegex(value, ruleValue) {
-					v.addError(field, "The %s format is invalid", field)
-				}
-			case "unique":
-				if exists && !v.validateUnique(value, ruleValue) {
-					v.addError(field, "The %s has already been taken", field)
-				}
-			case "unique_multi":
-				if exists && !v.validateUniqueMulti(value, ruleValue) {
-					v.addError(field, "The %s has already been taken", field)
-				}
-			case "unique_except":
-				if exists && !v.validateUniqueExcept(value, ruleValue) {
-					v.addError(field, "The %s has already been taken", field)
-				}
-			case "unique_multi_except":
-				if exists && !v.validateUniqueMultiExcept(value, ruleValue) {
-					v.addError(field, "The %s has already been taken", field)
+
+				switch ruleName {
+				case "required":
+					if !v.validateRequired(singleVal) {
+						v.addError(field, "The %s field is required", field)
+					}
+				case "email":
+					if exists && !v.validateEmail(singleVal) {
+						v.addError(field, "The %s must be a valid email address", field)
+					}
+				case "min":
+					if exists && !v.validateMin(singleVal, ruleValue) {
+						v.addError(field, "The %s must be at least %s characters", field, ruleValue)
+					}
+				case "max":
+					if exists && !v.validateMax(singleVal, ruleValue) {
+						v.addError(field, "The %s may not be greater than %s characters", field, ruleValue)
+					}
+				case "len":
+					if exists && !v.validateLen(singleVal, ruleValue) {
+						v.addError(field, "The %s must be %s characters", field, ruleValue)
+					}
+				case "numeric":
+					if exists && !v.validateNumeric(singleVal) {
+						v.addError(field, "The %s must be a number", field)
+					}
+				case "same":
+					if exists && !v.validateSame(singleVal, v.Data[ruleValue]) {
+						v.addError(field, "The %s and %s must match", field, ruleValue)
+					}
+				case "alpha":
+					if exists && !v.validateAlpha(fmt.Sprintf("%v", singleVal)) {
+						v.addError(field, "The %s may only contain letters", field)
+					}
+				case "alpha_num":
+					if exists && !v.validateAlphaNum(fmt.Sprintf("%v", singleVal)) {
+						v.addError(field, "The %s may only contain letters and numbers", field)
+					}
+				case "in":
+					if exists && !v.validateIn(singleVal, ruleValue) {
+						v.addError(field, "The selected %s is invalid", field)
+					}
+				case "not_in":
+					if exists && !v.validateNotIn(singleVal, ruleValue) {
+						v.addError(field, "The selected %s is invalid", field)
+					}
+				case "regex":
+					if exists && !v.validateRegex(singleVal, ruleValue) {
+						v.addError(field, "The %s format is invalid", field)
+					}
+				case "unique":
+					if exists && !v.validateUnique(singleVal, ruleValue) {
+						v.addError(field, "The %s has already been taken", field)
+					}
+				case "unique_multi":
+					if exists && !v.validateUniqueMulti(singleVal, ruleValue) {
+						v.addError(field, "The %s has already been taken", field)
+					}
+				case "unique_except":
+					if exists && !v.validateUniqueExcept(singleVal, ruleValue) {
+						v.addError(field, "The %s has already been taken", field)
+					}
+				case "unique_multi_except":
+					if exists && !v.validateUniqueMultiExcept(singleVal, ruleValue) {
+						v.addError(field, "The %s has already been taken", field)
+					}
 				}
 			}
 		}
@@ -136,6 +153,112 @@ func (v *Validator) Validate(rules map[string]string, customMessages ...map[stri
 
 	return len(v.Errors) == 0
 }
+
+// func (v *Validator) Validate(rules map[string]string, customMessages ...map[string]string) bool {
+// 	// Set custom messages if provided
+// 	if len(customMessages) > 0 {
+// 		v.CustomMessages = customMessages[0]
+// 	}
+
+// 	for field, ruleStr := range rules {
+// 		rules := strings.Split(ruleStr, "|")
+// 		value, exists := v.Data[field]
+
+// 		for _, rule := range rules {
+// 			if rule == "" {
+// 				continue
+// 			}
+
+// 			// Check for sometimes rule
+// 			if rule == "sometimes" {
+// 				if !exists {
+// 					continue // Skip validation if field doesn't exist
+// 				}
+// 				continue
+// 			}
+
+// 			parts := strings.SplitN(rule, ":", 2)
+// 			ruleName := parts[0]
+// 			ruleValue := ""
+// 			if len(parts) > 1 {
+// 				ruleValue = parts[1]
+// 			}
+
+// 			if !exists && ruleName != "required" {
+// 				continue
+// 			}
+
+// 			switch ruleName {
+// 			case "required":
+// 				if !v.validateRequired(value) {
+// 					v.addError(field, "The %s field is required", field)
+// 				}
+// 			case "email":
+// 				if exists && !v.validateEmail(value) {
+// 					v.addError(field, "The %s must be a valid email address", field)
+// 				}
+// 			case "min":
+// 				if exists && !v.validateMin(value, ruleValue) {
+// 					v.addError(field, "The %s must be at least %s characters", field, ruleValue)
+// 				}
+// 			case "max":
+// 				if exists && !v.validateMax(value, ruleValue) {
+// 					v.addError(field, "The %s may not be greater than %s characters", field, ruleValue)
+// 				}
+// 			case "len":
+// 				if exists && !v.validateLen(value, ruleValue) {
+// 					v.addError(field, "The %s must be %s characters", field, ruleValue)
+// 				}
+// 			case "numeric":
+// 				if exists && !v.validateNumeric(value) {
+// 					v.addError(field, "The %s must be a number", field)
+// 				}
+// 			case "same":
+// 				if exists && !v.validateSame(value, v.Data[ruleValue]) {
+// 					v.addError(field, "The %s and %s must match", field, ruleValue)
+// 				}
+// 			case "alpha":
+// 				if exists && !v.validateAlpha(value.(string)) {
+// 					v.addError(field, "The %s may only contain letters", field)
+// 				}
+// 			case "alpha_num":
+// 				if exists && !v.validateAlphaNum(value.(string)) {
+// 					v.addError(field, "The %s may only contain letters and numbers", field)
+// 				}
+// 			case "in":
+// 				if exists && !v.validateIn(value, ruleValue) {
+// 					v.addError(field, "The selected %s is invalid", field)
+// 				}
+// 			case "not_in":
+// 				if exists && !v.validateNotIn(value, ruleValue) {
+// 					v.addError(field, "The selected %s is invalid", field)
+// 				}
+// 			case "regex":
+// 				if exists && !v.validateRegex(value, ruleValue) {
+// 					v.addError(field, "The %s format is invalid", field)
+// 				}
+// 			case "unique":
+// 				if exists && !v.validateUnique(value, ruleValue) {
+// 					v.addError(field, "The %s has already been taken", field)
+// 				}
+// 			case "unique_multi":
+// 				if exists && !v.validateUniqueMulti(value, ruleValue) {
+// 					v.addError(field, "The %s has already been taken", field)
+// 				}
+// 			case "unique_except":
+// 				if exists && !v.validateUniqueExcept(value, ruleValue) {
+// 					v.addError(field, "The %s has already been taken", field)
+// 				}
+// 			case "unique_multi_except":
+// 				if exists && !v.validateUniqueMultiExcept(value, ruleValue) {
+// 					v.addError(field, "The %s has already been taken", field)
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	return len(v.Errors) == 0
+// }
 
 // === Validators ===
 func (v *Validator) validateRequired(value interface{}) bool {
@@ -421,19 +544,24 @@ func notwork(c *gola.Context, db *gorm.DB, rules map[string]string) (map[string]
 	return nil, old
 }
 
-// In validation package
 func ValidateRequest(c *gola.Context, rules map[string]string) (map[string]string, map[string]string) {
 	data := make(map[string]interface{})
 	old := make(map[string]string)
 
 	for field := range rules {
-		value := c.Input(field)
-		data[field] = value
-		old[field] = value
+		// 🔹 Check if field has multiple values
+		if arr := c.PostFormArray(field); len(arr) > 0 {
+			data[field] = arr
+			old[field] = strings.Join(arr, ",") // old value as comma-separated string
+		} else {
+			// fallback single value
+			value := c.Input(field)
+			data[field] = value
+			old[field] = value
+		}
 	}
 
 	db := database.DB
-
 	v := NewValidator(data, db)
 	errors := make(map[string]string)
 
@@ -447,6 +575,33 @@ func ValidateRequest(c *gola.Context, rules map[string]string) (map[string]strin
 
 	return errors, old
 }
+
+// In validation package
+// func ValidateRequest(c *gola.Context, rules map[string]string) (map[string]string, map[string]string) {
+// 	data := make(map[string]interface{})
+// 	old := make(map[string]string)
+
+// 	for field := range rules {
+// 		value := c.Input(field)
+// 		data[field] = value
+// 		old[field] = value
+// 	}
+
+// 	db := database.DB
+
+// 	v := NewValidator(data, db)
+// 	errors := make(map[string]string)
+
+// 	if !v.Validate(rules) {
+// 		for field, msgs := range v.GetErrors() {
+// 			if len(msgs) > 0 {
+// 				errors[field] = msgs[0]
+// 			}
+// 		}
+// 	}
+
+// 	return errors, old
+// }
 
 func ValidateCustom(c *gola.Context, rules map[string]string, customMessages map[string]string) (map[string]string, map[string]string) {
 	data := make(map[string]interface{})
@@ -477,11 +632,16 @@ func ValidateCustom(c *gola.Context, rules map[string]string, customMessages map
 func ValidateRequestJSON(c *gola.Context, rules map[string]string) bool {
 	data := make(map[string]interface{})
 	for field := range rules {
-		data[field] = c.Input(field)
+		// প্রথমে check করো multi value
+		if arr := c.PostFormArray(field); len(arr) > 0 {
+			data[field] = arr
+		} else {
+			// fallback single value
+			data[field] = c.Input(field)
+		}
 	}
 
 	db := database.DB
-
 	v := NewValidator(data, db)
 	if !v.Validate(rules) {
 		c.JSON(422, map[string]interface{}{
@@ -492,6 +652,25 @@ func ValidateRequestJSON(c *gola.Context, rules map[string]string) bool {
 	}
 	return true
 }
+
+// func ValidateRequestJSON(c *gola.Context, rules map[string]string) bool {
+// 	data := make(map[string]interface{})
+// 	for field := range rules {
+// 		data[field] = c.Input(field)
+// 	}
+
+// 	db := database.DB
+
+// 	v := NewValidator(data, db)
+// 	if !v.Validate(rules) {
+// 		c.JSON(422, map[string]interface{}{
+// 			"errors":  v.GetErrors(),
+// 			"message": "Validation failed",
+// 		})
+// 		return false
+// 	}
+// 	return true
+// }
 
 // func ValidateRequest(c *gola.Context, db *gorm.DB, rules map[string]string, responseType string) bool {
 // 	data := make(map[string]interface{})

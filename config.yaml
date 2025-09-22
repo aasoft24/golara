@@ -1,5 +1,5 @@
 app:
-  name: "Paystation"
+  name: "Golara"
   env: "local"
   timezone: "Asia/Dhaka"
 
@@ -9,25 +9,25 @@ database:
     mysql:
       host: 127.0.0.1
       port: 3306
-      database: tele_service
+      database: golara
       username: root
       password: 
     pgsql:
       host: 127.0.0.1
       port: 5432
-      database: paystation
-      username: paystation
+      database: pgress
+      username: pgress
       password: 123123
     sqlite:
-      path: mygola.db
+      path: golara.db
     sqlserver:
       host: 127.0.0.1
       port: 1433
-      database: mygola
+      database: golara
       username: sa
       password: secret
     mongodb:
-      uri: mongodb://root:secret@127.0.0.1:27017/mygola
+      uri: mongodb://root:secret@127.0.0.1:27017/golara
 server:
   host: 0.0.0.0
   port: 9092
